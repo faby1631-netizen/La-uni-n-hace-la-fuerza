@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juego Responsable con los Medios</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet);
+    background-size: 1400% 1400%;
+    animation: rainbow 10s ease infinite;
+    text-align: center;
+    color: white;
+  }
+  @keyframes rainbow {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+  }
+  .start-screen, .quiz-screen, .end-screen {
+    display: none;
+    padding: 20px;
+  }
+  .active { display: block; }
+  button {
+    background-color: #fff;
+    color: #444;
+    border: none;
+    padding: 12px 25px;
+    margin: 10px;
+    font-size: 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  button:hover { transform: scale(1.05); }
+  .question { font-size: 1.3em; margin-bottom: 15px; }
+  .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+  .alerta {
+    color: #ffdddd;
+    background: rgba(255,0,0,0.3);
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 10px;
+    animation: alertaFlash 0.5s ease;
+  }
+  @keyframes alertaFlash {
+    from { background: rgba(255,0,0,0.6); }
+    to { background: rgba(255,0,0,0.3); }
+  }
+</style>
+</head>
+<body>
+  <div class="start-screen active">
+    <h1>🎯 Juego Responsable con los Medios</h1>
+    <p>Reflexiona, aprende y diviértete 💡</p>
+    <button onclick="startGame()">Jugar ahora 🎯</button>
+  </div>
+
+  <div class="quiz-screen">
+    <h2 class="question"></h2>
+    <div id="answers"></div>
+    <div id="alerta"></div>
+  </div>
+
+  <div class="end-screen">
+    <h2>🎉 ¡Juego terminado! 🎉</h2>
+    <p id="score"></p>
+    <button onclick="location.reload()">Volver a jugar 🔁</button>
+  </div>
+
+  <canvas class="confetti"></canvas>
+
+<script>
+const questions = [
+  {q: "¿Por qué es importante usar los medios de comunicación responsablemente?", a: ["Porque influyen en lo que pensamos y hacemos", "Porque no tienen impacto", "Porque son aburridos"], correct: 0},
+  {q: "¿Qué enseña la Doctrina Social de la Iglesia sobre la comunicación?", a: ["Que debe servir a la verdad y al bien común", "Que solo sirve para entretener", "Que no es importante"], correct: 0},
+  {q: "¿Qué debes hacer antes de publicar en redes sociales?", a: ["Pensar si es respetuoso y verdadero", "Publicar sin pensar", "Copiar lo que otros dicen"], correct: 0},
+  {q: "¿Qué puedes hacer si ves contenido sospechoso en internet?", a: ["Reportarlo y no compartirlo", "Compartirlo igual", "Ignorarlo completamente"], correct: 0},
+  {q: "¿Por qué las relaciones auténticas son más valiosas que las digitales?", a: ["Porque se basan en el contacto real y la confianza", "Porque duran menos", "Porque no requieren compromiso"], correct: 0},
+  {q: "¿Cómo puedes proteger tu información personal en redes?", a: ["No compartiendo datos personales", "Dando tu contraseña", "Usando redes sin privacidad"], correct: 0},
+  {q: "¿Qué valores promueve la Iglesia en el uso de los medios?", a: ["Verdad, respeto y solidaridad", "Egoísmo y mentira", "Competencia y vanidad"], correct: 0},
+  {q: "¿Qué efecto puede tener confiar en personas desconocidas en línea?", a: ["Pueden engañarte o ponerte en riesgo", "Nada pasa", "Ganas más amigos"], correct: 0},
+  {q: "¿Qué papel juegan los medios en la sociedad actual?", a: ["Informan, educan y conectan a las personas", "No influyen en nada", "Aíslan a todos"], correct: 0},
+  {q: "¿Qué acción refleja el amor a Dios en redes sociales?", a: ["Compartir mensajes positivos y de respeto", "Ofender a otros", "Ignorar a los demás"], correct: 0}
+];
+
+let currentQuestion = 0;
+let score = 0;
+const startSound = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+const clickSound = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
+const winSound = new Audio('https://actions.google.com/sounds/v1/cartoon/slide_whistle_to_drum_hit.ogg');
+const loseSound = new Audio('https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg');
+
+function startGame() {
+  document.querySelector('.start-screen').classList.remove('active');
+  document.querySelector('.quiz-screen').classList.add('active');
+  startSound.play();
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[currentQuestion];
+  const questionEl = document.querySelector('.question');
+  const answersEl = document.getElementById('answers');
+  const alerta = document.getElementById('alerta');
+  alerta.innerHTML = "";
+  questionEl.textContent = q.q;
+  answersEl.innerHTML = "";
+  const options = [...q.a].sort(() => Math.random() - 0.5);
+  options.forEach((option, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = option;
+    btn.onclick = () => checkAnswer(q.a.indexOf(option) === q.correct);
+    answersEl.appendChild(btn);
+  });
+}
+
+function checkAnswer(isCorrect) {
+  clickSound.play();
+  if (isCorrect) {
+    score++;
+    winSound.play();
+    confetti();
+  } else {
+    loseSound.play();
+    const alerta = document.getElementById('alerta');
+    alerta.innerHTML = "<div class='alerta'>❌ Respuesta incorrecta</div>";
+  }
+  currentQuestion++;
+  if (currentQuestion < questions.length) {
+    setTimeout(showQuestion, 1200);
+  } else {
+    setTimeout(endGame, 1500);
+  }
+}
+
+function endGame() {
+  document.querySelector('.quiz-screen').classList.remove('active');
+  document.querySelector('.end-screen').classList.add('active');
+  document.getElementById('score').textContent = "Tu puntuación fue " + score + " de " + questions.length;
+}
+
+// Confeti simple
+function confetti() {
+  const duration = 1 * 1000;
+  const end = Date.now() + duration;
+  (function frame() {
+    const colors = ['#ff0','#0f0','#f0f','#0ff','#fff'];
+    const particle = document.createElement('div');
+    particle.style.position = 'fixed';
+    particle.style.top = Math.random() * 100 + '%';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.width = '10px';
+    particle.style.height = '10px';
+    particle.style.background = colors[Math.floor(Math.random()*colors.length)];
+    particle.style.borderRadius = '50%';
+    particle.style.animation = 'fall 1s linear';
+    document.body.appendChild(particle);
+    setTimeout(()=>particle.remove(),1000);
+    if (Date.now() < end) requestAnimationFrame(frame);
+  }());
+}
+</script>
+</body>
+</html>
